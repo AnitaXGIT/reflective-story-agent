@@ -1,5 +1,5 @@
 """
-Gradio user interface components
+Gradio user interface components with authentication
 """
 
 import gradio as gr
@@ -16,6 +16,19 @@ class StoryInterface:
     def __init__(self):
         """Initialize the interface"""
         self.demo = None
+    
+    def authenticate_user(self, username, password):
+        """
+        Simple authentication function for Gradio
+        
+        Args:
+            username (str): Entered username
+            password (str): Entered password
+            
+        Returns:
+            bool: True if credentials are correct, False otherwise
+        """
+        return username == settings.AUTH_USERNAME and password == settings.AUTH_PASSWORD
     
     def process_story_parameters(self, structure_type, theme, audience, length, style, key_messages):
         """
@@ -131,29 +144,13 @@ class StoryInterface:
             
         except Exception as e:
             return f"❌ **Export Error:** {str(e)}"
-        """
-        Generate full article from the edited outline
-        
-        Args:
-            edited_outline (str): The user-reviewed and possibly edited outline
-            theme, audience, length, style, key_messages: Original parameters
-            
-        Returns:
-            str: Generated article or error message
-        """
-        if not edited_outline or not edited_outline.strip():
-            return "❌ **Error:** Please generate an outline first or provide outline content."
-        
-        # Generate the full article
-        return article_generator.generate_article(
-            edited_outline, theme, audience, length, style, key_messages
-        )
     
     def create_interface(self):
-        """Create and return the Gradio interface"""
-        with gr.Blocks(title=settings.APP_TITLE) as demo:
+        """Create and return the Gradio interface with authentication"""
+        with gr.Blocks(title=settings.APP_TITLE, theme=gr.themes.Soft()) as demo:
             gr.Markdown(f"# 🌟 {settings.APP_TITLE}")
             gr.Markdown(settings.APP_DESCRIPTION)
+            gr.Markdown("---")
             
             # Step 1: Input Parameters
             with gr.Group():
@@ -189,7 +186,7 @@ class StoryInterface:
                         )
                         
                         style = gr.Textbox(
-                            label="✏️ Writing Style (Optional)",
+                            label="✍️ Writing Style (Optional)",
                             placeholder="e.g., conversational, inspirational, thoughtful, warm...",
                             lines=1
                         )
@@ -285,14 +282,27 @@ class StoryInterface:
         self.demo = demo
         return demo
     
-    def launch(self):
-        """Launch the Gradio interface"""
+    def launch(self, share=False, auth=None):
+        """
+        Launch the Gradio interface with optional authentication
+        
+        Args:
+            share (bool): Whether to create a public link
+            auth (tuple): (username, password) or None for no auth
+        """
         if not self.demo:
             self.create_interface()
         
         print(f"🌟 Starting {settings.APP_TITLE}...")
-        print("📱 Open your browser to: http://127.0.0.1:7860")
-        self.demo.launch()
+        
+        # Set up authentication if provided
+        if auth:
+            print("🔒 Authentication enabled")
+            print("📱 Open your browser to: http://127.0.0.1:7860")
+            self.demo.launch(share=share, auth=self.authenticate_user)
+        else:
+            print("📱 Open your browser to: http://127.0.0.1:7860")
+            self.demo.launch(share=share)
 
 # Create global interface instance
 story_interface = StoryInterface()

@@ -1,6 +1,5 @@
-
 """
-Main entry point for the Reflective Story Article Generator
+Main entry point for the Reflective Story Article Generator with Authentication
 """
 
 import sys
@@ -13,4 +12,15 @@ from ui.interface import story_interface
 from config.settings import settings
 
 if __name__ == "__main__":
-    story_interface.launch()
+    # Enable authentication for Hugging Face deployment
+    # For local development, set auth=None to disable authentication
+    
+    # Check if running on Hugging Face (they set this environment variable)
+    is_huggingface = os.getenv("SPACE_ID") is not None
+    
+    if is_huggingface:
+        print("🤗 Running on Hugging Face Spaces with authentication enabled")
+        story_interface.launch(share=False, auth=(settings.AUTH_USERNAME, settings.AUTH_PASSWORD))
+    else:
+        print("💻 Running locally - authentication disabled for development")
+        story_interface.launch(share=False, auth=None)
