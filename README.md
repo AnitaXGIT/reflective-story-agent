@@ -8,6 +8,7 @@ sdk_version: 4.0.0
 app_file: app.py
 pinned: false
 license: mit
+short_description: AI-powered automation for writing reflective articles
 ---
 
 # 🌟 Reflective Story Article Generator
@@ -57,7 +58,6 @@ emoji: 🔥
 colorFrom: green
 colorTo: yellow
 sdk: gradio
-sdk_version: 5.44.1
 app_file: app.py
 pinned: false
 license: mit
