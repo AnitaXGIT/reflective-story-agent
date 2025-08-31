@@ -1,5 +1,5 @@
 """
-Gradio user interface components with authentication
+Gradio user interface components with Flask file server integration
 """
 
 import gradio as gr
@@ -9,6 +9,10 @@ from src.utils.validators import validator
 from src.ai.outline_generator import outline_generator
 from src.ai.article_generator import article_generator
 from src.export.export_handler import export_handler
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from file_server import file_server
 
 class StoryInterface:
     """Main interface for the story generator application"""
@@ -16,6 +20,8 @@ class StoryInterface:
     def __init__(self):
         """Initialize the interface"""
         self.demo = None
+        # Start the Flask file server
+        file_server.start_server()
     
     def authenticate_user(self, username, password):
         """
@@ -104,43 +110,51 @@ class StoryInterface:
         )
     
     def export_txt(self, article_content, structure_type, theme, audience, length):
-        """
-        Export article as TXT file
-        
-        Returns:
-            str: Success message with file path or error message
-        """
+        """Export article as TXT file with Flask download link"""
         try:
             if not article_content or not article_content.strip():
-                return "❌ **Error:** No article content to export. Please generate an article first."
+                return "⚠️ **Error:** No article content to export. Please generate an article first."
             
-            filepath = export_handler.export_to_txt(
+            filename, download_url = export_handler.export_to_txt(
                 article_content, theme, audience, length, structure_type
             )
             
-            file_size = export_handler.get_file_size(filepath)
-            return f"✅ **TXT Export Successful!**\n\nFile saved: {filepath}\nSize: {file_size}"
+            file_size = export_handler.get_file_size(f"downloads/{filename}")
+            
+            return f"""✅ **TXT Export Ready!**
+
+**Filename:** {filename}
+**Size:** {file_size}
+
+**Click the link below to download:**
+[📄 Download TXT File]({download_url})
+
+*This will open the browser's "Save As" dialog.*"""
             
         except Exception as e:
             return f"❌ **Export Error:** {str(e)}"
-    
+
     def export_pdf(self, article_content, structure_type, theme, audience, length):
-        """
-        Export article as PDF file
-        
-        Returns:
-            str: Success message with file path or error message
-        """
+        """Export article as PDF file with Flask download link"""
         try:
             if not article_content or not article_content.strip():
-                return "❌ **Error:** No article content to export. Please generate an article first."
+                return "⚠️ **Error:** No article content to export. Please generate an article first."
             
-            filepath = export_handler.export_to_pdf(
+            filename, download_url = export_handler.export_to_pdf(
                 article_content, theme, audience, length, structure_type
             )
             
-            file_size = export_handler.get_file_size(filepath)
-            return f"✅ **PDF Export Successful!**\n\nFile saved: {filepath}\nSize: {file_size}"
+            file_size = export_handler.get_file_size(f"downloads/{filename}")
+            
+            return f"""✅ **PDF Export Ready!**
+
+**Filename:** {filename}
+**Size:** {file_size}
+
+**Click the link below to download:**
+[📑 Download PDF File]({download_url})
+
+*This will open the browser's "Save As" dialog.*"""
             
         except Exception as e:
             return f"❌ **Export Error:** {str(e)}"
@@ -179,14 +193,14 @@ class StoryInterface:
                         )
                         
                         length = gr.Number(
-                            label="📝 Word Count",
+                            label="📊 Word Count",
                             value=settings.DEFAULT_WORD_COUNT,
                             minimum=settings.MIN_WORD_COUNT,
                             maximum=settings.MAX_WORD_COUNT
                         )
                         
                         style = gr.Textbox(
-                            label="✍️ Writing Style (Optional)",
+                            label="✏️ Writing Style (Optional)",
                             placeholder="e.g., conversational, inspirational, thoughtful, warm...",
                             lines=1
                         )
@@ -230,7 +244,7 @@ class StoryInterface:
                 gr.Markdown("## Step 4: Generate Full Article")
                 
                 with gr.Row():
-                    generate_article_btn = gr.Button("✍️ Generate Article", variant="primary", size="lg")
+                    generate_article_btn = gr.Button("✏️ Generate Article", variant="primary", size="lg")
                 
                 with gr.Row():
                     article_output = gr.Markdown(label="Generated Article")
@@ -238,15 +252,14 @@ class StoryInterface:
             # Step 5: Export Article
             with gr.Group():
                 gr.Markdown("## Step 5: Export Article")
-                gr.Markdown("*Download your generated article in your preferred format.*")
+                gr.Markdown("*Click to create download links for your article.*")
                 
                 with gr.Row():
-                    with gr.Column():
-                        export_txt_btn = gr.Button("📄 Export as TXT", variant="secondary")
-                        export_pdf_btn = gr.Button("📑 Export as PDF", variant="secondary")
-                    
-                    with gr.Column():
-                        export_status = gr.Markdown(label="Export Status")
+                    export_txt_btn = gr.Button("📄 Export as TXT", variant="secondary")
+                    export_pdf_btn = gr.Button("📑 Export as PDF", variant="secondary")
+                
+                with gr.Row():
+                    export_status = gr.Markdown(label="Download Links")
             
             # Connect buttons to functions
             process_btn.click(
@@ -258,7 +271,7 @@ class StoryInterface:
             generate_outline_btn.click(
                 fn=self.generate_outline,
                 inputs=[structure_type, theme, audience, length, style, key_messages],
-                outputs=[outline_output, outline_editor]  # Update both display and editor
+                outputs=[outline_output, outline_editor]
             )
             
             generate_article_btn.click(
