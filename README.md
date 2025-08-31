@@ -1,5 +1,4 @@
 ---
-<<<<<<< HEAD
 title: Reflective Story Article Generator
 emoji: 🌟
 colorFrom: blue
@@ -52,7 +51,7 @@ This application requires login credentials to access. Please contact the admini
 ## 📞 Support
 
 For access or technical issues, contact the administrator.
-=======
+
 title: Reflective Story Generator
 emoji: 🔥
 colorFrom: green
@@ -63,7 +62,9 @@ app_file: app.py
 pinned: false
 license: mit
 short_description: AI-powered automation for writing articles
----
 
 Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
->>>>>>> ea705014f3d2e31af94c87e58fb226b9f492cfe7
+ea705014f3d2e31af94c87e58fb226b9f492cfe7
+
+
+
